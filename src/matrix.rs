@@ -2,6 +2,7 @@
 Matrix structure. Stored in vector. Column wise. 
 */
 
+#[derive(Debug, Default)]
 pub struct Mat {
     ncol: usize,
     nrow: usize,
@@ -26,7 +27,7 @@ impl Mat {
     pub fn printer(& self) {
         for i in 0..self.nrow {
             for j in 0..self.ncol {
-                print!{"{:?}", self.vec[i + self.nrow*j]};
+                print!{"{:}", self.vec[i + self.nrow*j]};
                 print!("{:}", " ");
             }
             println!("{:}", "\n");
@@ -51,6 +52,16 @@ impl Mat {
         return temp;
     }
 
+    pub fn plus(& self, inp: &mut Mat) {
+
+            for i in 0..self.nrow {
+                for j in 0..self.ncol {
+                    inp.vec[i + self.nrow*j] = self.vec[i + self.nrow*j] + inp.vec[i + self.nrow*j];
+                }
+            }
+    }
+
+
 }
 
 impl std::ops::Index<[usize; 2]> for Mat {
@@ -67,21 +78,22 @@ impl std::ops::IndexMut<[usize; 2]> for Mat {
     }
 }
 
-impl std::ops::Add<Mat> for Mat {
-    type Output = Mat;
 
-    fn add(self, inp: Mat) -> Mat {
-        let mut temp = Mat::new(inp.rows(), inp.cols());
+impl <'a, 'b>std::ops::Add<&'b Mat> for &'a Mat {
+    type Output = Mat;
+    fn add(self, inp: &'b Mat) -> Mat {
+        let mut temp = Mat::new(self.nrow,self.ncol);
         temp.fill(0.);
         for i in 0..self.nrow {
             for j in 0..self.ncol {
-                temp[[i, j]] = self.vec[i + self.nrow*j] + inp.vec[i + self.nrow*j];
+                temp.vec[i + self.nrow*j] = self.vec[i + self.nrow*j] + inp.vec[i + self.nrow*j];
             }
         }
-
         return temp;
     }
 }
+
+
 
 
 

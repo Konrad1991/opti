@@ -56,14 +56,33 @@ fn main() {
     m2.fill(var);
     for i in 0..m1.rows() {
         for j in 0..m1.cols() {
-            m1[[i,j]] = 5.;
-            m2[[i,j]] = 6.;
+            let t_i: f64 = i as f64;
+            let t_j: f64 = j as f64;
+            let temp: f64 = t_i*t_j;
+            m1[[i,j]] = temp + 1.;
+            m2[[i,j]] = temp;
         }
     }
 
+    //println!("{:?}", "m1");
+    //m1.printer();
+    let mut m1 = & m1 + & m2;
     
-    let m3 = m1 + m2;
-    
-    m3.printer();
+    //println!("{:?}", "m1");
+    //m1.printer();
+    //println!("{:?}", "m2");
+    //m2.printer();
+    //let mut m3 = &m1 + &m2;
+
+    println!("{:?}", "m1");
+    m1.printer();
+    println!("{:?}", "m2");
+    m2.printer();
+    m2.plus(&mut m1);
+    println!("{:?}", "m1");
+    m1.printer();
+
+
+
 
 }
