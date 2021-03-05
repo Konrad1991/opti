@@ -22,6 +22,7 @@ program PSO
     use init
     use ps
     use testfct
+    use neighberhood
 
     implicit none
     real(8), allocatable, dimension(:) :: lbound
@@ -29,6 +30,9 @@ program PSO
     type(SwarmStruct) :: SOne
     real(8) res
     integer :: i
+
+    type(neighbor) :: N
+    type(neighbours) :: test2
 
     allocate(lbound(5))
     allocate(ubound(5))
@@ -38,10 +42,26 @@ program PSO
     i = minloc(SOne%best_errors, 1)
 
     call calculate_errors(SOne)
-    print *, i
-    print *, SOne%best_errors(i)
-    print *, SOne%S(i, :)
+    !!print *, i
+    !!print *, SOne%best_errors(i)
+    !!print *, SOne%S(i, :)
     
-    call test()
+    !!call test()
+
+    call calc_neighbours(N, 11)
+    !!deallocate(N%N)
+    !!deallocate(N%K)
+    !!call calc_neighbours(N, 10)
+
+    !!print *, N%K
+    
+    test2 = N%N(1)
+    print *, test2%neigh(3)
+
+
+    deallocate(lbound)
+    deallocate(ubound)
+    deallocate(N%N)
+    deallocate(N%K)
 
 end program PSO
