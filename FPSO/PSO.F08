@@ -17,51 +17,75 @@ end function
 
 end module
 
+module parameters
+    implicit none
+    real(8) :: initial_cog = 2.5
+    real(8) :: initial_soc = 0.5
+    real(8) :: final_cog = 0.5
+    real(8) :: final_soc = 2.5
+    real(8) :: par_w = 0.5
+end module 
+
+module psomod 
+
+use init
+use parameters
+use neighberhood
+use parameters
+
+contains 
+subroutine calculate_errors(inp)
+    implicit none
+    type(SwarmStruct) :: inp
+    integer :: i
+    do i = 1, inp%n_swarm
+        inp%current_errors(i) = inp%userfct(inp%S(i, :), inp%n_params)
+    end do
+end subroutine
+
+subroutine optimizer(n_swarm, n_params,  lb, ub, desired_error, fct)
+    implicit none
+    type(SwarmStruct) :: struct
+    type(neighbor) :: hood
+    integer :: n_swarm
+    integer :: n_params
+    real(8), dimension(n_params) :: lb, ub
+    real(8), allocatable, dimension(:) :: temp
+    integer :: i
+    real(8) :: desired_error
+
+    interface
+        function fct (inp, problem_size) result(out)
+            implicit none
+            integer, intent(in) :: problem_size
+            real(8), intent(in), dimension(problem_size) :: inp
+            real(8) :: out
+        end function fct
+    end interface
+
+    call init_fct(struct, n_swarm, n_params, lb, ub, fct)
+    struct%best_particle = minloc(struct%best_errors, 1)
+    struct%parameter_of_best_particle = struct%S(struct%best_particle, :)
+
+
+end subroutine
+
+end module
 
 program PSO
-    use init
-    use ps
     use testfct
-    use neighberhood
+    use psomod
 
     implicit none
+
     real(8), allocatable, dimension(:) :: lbound
     real(8), allocatable, dimension(:) :: ubound
-    type(SwarmStruct) :: SOne
-    real(8) res
-    integer :: i
 
-    type(neighbor) :: N
-    type(neighbours) :: test2
+    allocate(lbound(3))
+    allocate(ubound(3))
+    lbound = 0.9
+    ubound = 1.1
+    call optimizer(4000, 3, lbound, ubound, 0.0,  test_fct)
 
-    allocate(lbound(5))
-    allocate(ubound(5))
-    lbound = 0.0
-    ubound = 10
-    call init_fct(SOne, 40, 3, lbound, ubound, test_fct)
-    i = minloc(SOne%best_errors, 1)
-
-    call calculate_errors(SOne)
-    !!print *, i
-    !!print *, SOne%best_errors(i)
-    !!print *, SOne%S(i, :)
-    
-    !!call test()
-
-    call calc_neighbours(N, 11)
-    !!deallocate(N%N)
-    !!deallocate(N%K)
-    !!call calc_neighbours(N, 10)
-
-    !!print *, N%K
-    
-    test2 = N%N(1)
-    print *, test2%neigh(3)
-
-
-    deallocate(lbound)
-    deallocate(ubound)
-    deallocate(N%N)
-    deallocate(N%K)
 
 end program PSO

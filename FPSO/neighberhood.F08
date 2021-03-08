@@ -96,3 +96,5 @@ subroutine calc_neighbours(NE, number_particles)
 
     end do 
 end subroutine
+
+end module neighberhood

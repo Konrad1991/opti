@@ -3,7 +3,8 @@ module Init
     real(8), allocatable, dimension(:,:) :: S
     real(8), allocatable, dimension(:,:) :: velocities
     real(8), allocatable, dimension(:) :: best_errors
-    real(8) :: best_particle
+    real(8), allocatable, dimension(:) :: current_errors
+    integer :: best_particle
     real(8), allocatable, dimension(:) :: parameter_of_best_particle
     integer :: n_swarm !! number of rows of swarm & velocities
     integer :: n_params !! number of cols of swarm & velocities 
@@ -19,17 +20,15 @@ abstract interface
     end function func
 end interface
 
-real(8) :: cog = 2.5
-real(8) :: soc = 0.5
-
 contains
 
-subroutine calculate_errors(inp)
+subroutine calculate_errors_init(inp)
     implicit none
     type(SwarmStruct) :: inp
     integer :: i
     do i = 1, inp%n_swarm
         inp%best_errors(i) = inp%userfct(inp%S(i, :), inp%n_params)
+        inp%current_errors(i) = inp%best_errors(i)
     end do
 
 end subroutine
@@ -55,10 +54,12 @@ end interface
     allocate(inp_struct%S(n_swarm, n_params))
     allocate(inp_struct%velocities(n_swarm, n_params))
     allocate(inp_struct%best_errors(n_swarm))
+    allocate(inp_struct%current_errors(n_swarm))
     allocate(inp_struct%parameter_of_best_particle(n_params))
 
     allocate(temp(n_params))
     inp_struct%best_errors = 0.0
+    inp_struct%current_errors = 0.0
     inp_struct%parameter_of_best_particle = 0.0
     inp_struct%velocities = 0.0
 
@@ -69,7 +70,7 @@ end interface
         inp_struct%S(i, :) = lb + (ub - lb)*temp
     end do
 
-    call calculate_errors(inp_struct)
+    call calculate_errors_init(inp_struct)
     
 end subroutine
 

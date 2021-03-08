@@ -31,7 +31,7 @@ subroutine test()
     call init_fct(SOne, 40, 3, lbound, ubound, fct)
     i = minloc(SOne%best_errors, 1)
 
-    call calculate_errors(SOne)
+    call calculate_errors_init(SOne)
     print *, i
     print *, SOne%best_errors(i)
     print *, SOne%S(i, :)
