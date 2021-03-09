@@ -14,7 +14,7 @@ contains
 
 subroutine resize(NE) 
     implicit none
-    type(neighbor) :: NE
+    type(neighbor), intent(inout) :: NE
     allocate(NE%N(NE%number_particles))
     allocate(NE%K(NE%number_particles))
 end subroutine
