@@ -1,2 +1,2 @@
-pso: neighberhood.F08 pso_mod.f08 init.f08 PSO.F08
-	gfortran -o pso neighberhood.F08 pso_mod.f08 init.f08 PSO.F08
+pso: PSO.F08
+	gfortran -o pso PSO.F08
