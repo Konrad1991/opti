@@ -6,6 +6,8 @@ module Init
     real(8), allocatable, dimension(:) :: current_errors
     integer :: best_particle
     real(8), allocatable, dimension(:) :: parameter_of_best_particle
+    real(8), allocatable, dimension(:,:) :: personal_best_parameters
+    real(8) :: global_best_error
     integer :: n_swarm !! number of rows of swarm & velocities
     integer :: n_params !! number of cols of swarm & velocities 
     procedure(func), pointer, nopass :: userfct 
@@ -39,6 +41,7 @@ subroutine init_fct(inp_struct, n_swarm, n_params, lb, ub, fct)
     real(8), dimension(n_params) :: lb, ub
     real(8), allocatable, dimension(:) :: temp
     integer :: i
+    integer, dimension(1) :: tp
 
 interface
     function fct (inp, problem_size) result(out)
@@ -53,6 +56,7 @@ end interface
     inp_struct%n_params = n_params
     allocate(inp_struct%S(n_swarm, n_params))
     allocate(inp_struct%velocities(n_swarm, n_params))
+    allocate(inp_struct%personal_best_parameters(n_swarm, n_params))
     allocate(inp_struct%best_errors(n_swarm))
     allocate(inp_struct%current_errors(n_swarm))
     allocate(inp_struct%parameter_of_best_particle(n_params))
@@ -68,10 +72,15 @@ end interface
     do i = 1, n_swarm
         call random_number(temp)
         inp_struct%S(i, :) = lb + (ub - lb)*temp
+        inp_struct%personal_best_parameters(i, :) = inp_struct%S(i, :)
     end do
 
     call calculate_errors_init(inp_struct)
-    
+
+    tp  = minloc(inp_struct%best_errors)
+    inp_struct%best_particle = tp(1)
+    inp_struct%global_best_error = inp_struct%best_errors(inp_struct%best_particle)
+
 end subroutine
 
 end module

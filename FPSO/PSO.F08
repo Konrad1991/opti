@@ -47,6 +47,22 @@ subroutine calculate_errors(inp)
     end do
 end subroutine
 
+subroutine check_boundaries(inp, n_params, lb, ub, index)
+    implicit none
+    type(swarmStruct), intent(inout):: inp
+    integer :: n_params
+    real(8), dimension(n_params) :: lb, ub
+    integer :: i, index
+
+    do i = 1, n_params
+        if (inp%S(index, i) > ub(i)) then
+            inp%S(index, i) = ub(i)
+        else if (inp%S(index, i) < lb(i)) then
+            inp%S(index, i) = lb(i)
+        end if
+    end do
+end subroutine
+
 subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, fct)
     implicit none
     type(SwarmStruct) :: struct
@@ -55,14 +71,24 @@ subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, f
     integer :: n_params
     real(8), dimension(n_params) :: lb, ub
     real(8), allocatable, dimension(:) :: temp
-    integer, allocatable, dimension(:) :: hood_numbers
-    integer :: i, j, k
+    type(neighbours) :: hood_numbers
+    integer :: i, j, k, l
     integer :: n_generations
     integer :: best_neighberhood_particle
     real(8), intent(in) :: desired_error
     logical :: checker
     logical :: convergence
-
+    real(8), allocatable, dimension(:) :: errors_hood
+    real(8), dimension(n_params) :: local_best_parameters
+    real(8), dimension(n_params) :: rand1
+    real(8), dimension(n_params) :: rand2
+    real(8), dimension(n_params) :: cog_vector
+    real(8), dimension(n_params) :: soc_vector
+    integer, dimension(1) :: min_position
+    real(8) :: min_position_error
+    integer :: convergence_counter
+    integer :: position_local_best
+    
     interface
         function fct (inp, problem_size) result(out)
             implicit none
@@ -89,6 +115,7 @@ subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, f
             deallocate(hood%N)
             deallocate(hood%K)
             call calc_neighbours(hood, n_swarm)
+            convergence = .FALSE.
         end if
 
         par_w = par_w_max - i*(par_w_max - par_w_min)/n_generations
@@ -97,20 +124,73 @@ subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, f
         soc = initial_soc - (initial_soc - final_soc) * (i + 1) / n_generations
 
         do j = 1, n_swarm 
-            allocate(hood_numbers(hood%K(j)))
+            allocate(hood_numbers%neigh(hood%K(j)))
+            allocate(errors_hood(hood%K(j)))
+            hood_numbers%neigh = hood%N(j)%neigh
 
-            hood_numbers = hood%N%neigh(j)
+            do k = 1, hood%K(j)
+                errors_hood(k) = struct%best_errors(hood_numbers%neigh(k))
+            end do
 
+            min_position = minloc(errors_hood)
 
-            deallocate(hood_numbers)
-        end do 
+            position_local_best = hood_numbers%neigh(min_position(1))
 
+            local_best_parameters = struct%S(position_local_best, :)
 
+            call random_number(rand1)
+            call random_number(rand2)
 
+            struct%velocities(j, :) = par_w*struct%velocities(j,:)
+            rand1 = rand1*cog
+            rand2 = rand2*soc
 
+            do l = 1, n_params
+                cog_vector(l) = struct%personal_best_parameters(j,l) - struct%S(j, l)
+                soc_vector(l) = local_best_parameters(l) - struct%S(j, l)
+            end do
+            
+            do l = 1, n_params
+                cog_vector(l) = rand1(l)*cog_vector(l)
+                soc_vector(l) = rand2(l)*soc_vector(l)
+            end do
 
+            struct%velocities(j, :) = struct%velocities(j, :) + cog_vector
+            struct%velocities(j, :) = struct%velocities(j, :) + soc_vector
 
+            struct%S(j, :) = struct%S(j, :) + struct%velocities(j, :)
 
+            call check_boundaries(struct, n_params, lb, ub, j)
+
+            call calculate_errors(struct)
+
+            if (struct%current_errors(j) < struct%best_errors(j)) then
+                struct%best_errors(j) = struct%current_errors(j)
+                struct%personal_best_parameters(j, :) = struct%S(j,:)
+            end if
+
+            min_position = minloc(struct%best_errors)
+            min_position_error = struct%best_errors(min_position(1))
+
+            deallocate(errors_hood)
+            deallocate(hood_numbers%neigh)
+        end do
+        
+        if(min_position_error < struct%global_best_error) then
+            struct%global_best_error = min_position_error
+            struct%best_particle = min_position(1)
+        else
+            convergence_counter = convergence_counter + 1
+            if (convergence_counter > 50) then
+                convergence =  .TRUE.
+            end if
+        end if
+
+        if (modulo(i, 50) == 0) then
+            print*, struct%global_best_error
+            print *, i
+        end if 
+        
         i = i + 1
     end do 
 
@@ -132,9 +212,8 @@ program PSO
 
     allocate(lbound(3))
     allocate(ubound(3))
-    lbound = 0.9
-    ubound = 1.1
-    call optimizer(4000, 10, 3, lbound, ubound, desired_error,  test_fct)
-
+    lbound = -10
+    ubound = 100
+    call optimizer(40, 1000, 3, lbound, ubound, desired_error,  test_fct)
 
 end program PSO
