@@ -1,3 +1,4 @@
+
 # Particle swarm optimization (PSO)
 
 The repository pso contains a particle swarm optimizer written in fortran. The Code is in ./FPSO/PSO.F08. If you want to use it you can include the file in your project. The main function which conducts the parameter search is called 'optimizer' and needs 8 arguments.
@@ -35,7 +36,7 @@ module testfct
         end do
     end function
     
-    end module
+end module
 
 
 program PSO
