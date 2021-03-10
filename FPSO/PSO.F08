@@ -10,8 +10,10 @@ function test_fct(inp, problem_size) result(out)
     real(8), intent(in), dimension(problem_size) :: inp
     real(8) :: out
     integer :: i
+
+    out = 0.0
     do i = 1, (problem_size -1)
-        out = out + 100.0*(inp(i+1) - inp(i)**2)**2 + (1 - inp(i)**2)**2
+        out = out + 100.0*(inp(i+1) - inp(i)**2)**2 + (1 - inp(i) )**2
     end do
 end function
 
@@ -63,7 +65,7 @@ subroutine check_boundaries(inp, n_params, lb, ub, index)
     end do
 end subroutine
 
-subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, fct)
+subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, fct, result)
     implicit none
     type(SwarmStruct) :: struct
     type(neighbor) :: hood
@@ -88,6 +90,8 @@ subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, f
     real(8) :: min_position_error
     integer :: convergence_counter
     integer :: position_local_best
+
+    real(8), intent(inout), dimension(n_params) :: result
     
     interface
         function fct (inp, problem_size) result(out)
@@ -179,10 +183,16 @@ subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, f
         if(min_position_error < struct%global_best_error) then
             struct%global_best_error = min_position_error
             struct%best_particle = min_position(1)
+            struct%parameter_of_best_particle = struct%S(min_position(1), :)
+
+            if(struct%global_best_error <= desired_error) then
+                exit
+            end if
         else
             convergence_counter = convergence_counter + 1
             if (convergence_counter > 50) then
                 convergence =  .TRUE.
+                convergence_counter = 0
             end if
         end if
 
@@ -196,6 +206,8 @@ subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, f
 
     deallocate(temp)
 
+    result = struct%parameter_of_best_particle
+
 end subroutine
 
 end module
@@ -208,12 +220,17 @@ program PSO
 
     real(8), allocatable, dimension(:) :: lbound
     real(8), allocatable, dimension(:) :: ubound
-    real(8) :: desired_error = 0.00001
+    real(8), allocatable, dimension(:) :: result
+
+    real(8) :: desired_error = 0.000001
 
     allocate(lbound(3))
     allocate(ubound(3))
-    lbound = -10
-    ubound = 100
-    call optimizer(40, 1000, 3, lbound, ubound, desired_error,  test_fct)
+    allocate(result(3))
+    lbound = 0.001
+    ubound = 200.0
+    call optimizer(60, 100000, 3, lbound, ubound, desired_error,  test_fct, result)
+
+    print*, result
 
 end program PSO
