@@ -492,7 +492,7 @@ program PSO
     allocate(ubound(3))
     allocate(result(3))
     lbound = 0.001
-    ubound = 200.0
+    ubound = 50.0
     call optimizer(60, 100000, 3, lbound, ubound, desired_error,  test_fct, result)
 
     print*, result
