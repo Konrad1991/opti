@@ -1,7 +1,9 @@
 
 # Particle swarm optimization (PSO)
 
-The repository pso contains a particle swarm optimizer written in fortran. The Code is in ./FPSO/PSO.F90. If you want to use it you can include the file in your project. The main function which conducts the parameter search is called 'optimizer' and needs 8 arguments.
+The repository pso contains a particle swarm optimizer written in fortran. It uses an random adaptive neighberhood for better exploration of parameter spaces. Useful when many parameters have to be optimized.
+
+Furthermore, is the project structured as a fpm project. 
 
 1. number of particles (particle)
 2. number of generations (n_gen)
@@ -40,25 +42,28 @@ end module
 
 
 program PSO
-    use testfct
-    use psomod
+    
+  use testfct
+  use psomod
 
-    implicit none
+  implicit none
 
-    real(8), allocatable, dimension(:) :: lbound
-    real(8), allocatable, dimension(:) :: ubound
-    real(8), allocatable, dimension(:) :: result
+  integer:: n_swarm, n_generations, n_params
+  real(8) :: lb(3), ub(3)
+  real(8) :: desired_error
+  real(8) :: result(3)
 
-    real(8) :: desired_error = 0.000001
 
-    allocate(lbound(3))
-    allocate(ubound(3))
-    allocate(result(3))
-    lbound = 0.001
-    ubound = 50.0
-    call optimizer(60, 100000, 3, lbound, ubound, desired_error,  test_fct, result)
+  n_swarm = 40
+  n_generations = 1000
+  n_params = 3
+  lb = -10
+  ub = 10
+  desired_error = 0.00001
 
-    print*, result
+  call optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, test_fct, result)
+
+  print*, result
 
 end program PSO
 ```
