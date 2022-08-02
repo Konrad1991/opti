@@ -3,7 +3,12 @@
 
 The repository pso contains a particle swarm optimizer written in fortran. It uses an random adaptive neighberhood for better exploration of parameter spaces. Useful when many parameters have to be optimized.
 
-Furthermore, is the project structured as a fpm project. 
+Furthermore, is the project structured as a fpm project. Thus, the project can be used by adding the following two lines to the toml file:
+
+[dependencies]
+pso = { git="https://github.com/Konrad1991/pso"}
+
+
 
 1. number of particles (particle)
 2. number of generations (n_gen)
