@@ -60,7 +60,7 @@ program PSO
 
 
   n_swarm = 40
-  n_generations = 1000
+  n_generations = 10000
   n_params = 3
   lb = -10
   ub = 10
