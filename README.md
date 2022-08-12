@@ -15,7 +15,7 @@ opti = { git="https://github.com/Konrad1991/opti"}
 
 The project contains only one subroutine called optimizer. It accepts the following parameter:
 
-1. integer :: number of particles (particle)
+1. ![#f03c15](integer) :: number of particles (particle)
 2. integer :: number of generations (n_gen)
 3. integer :: how many parameters have to be optimized (n_params)
 4. real(8), dimension(n_params) :: An array containing the lower boundaries for the optimization (dimension(n_params))
