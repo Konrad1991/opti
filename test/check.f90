@@ -1,4 +1,4 @@
-program check
+program basic_checks
     
     use testfct
     use psomod
@@ -15,4 +15,6 @@ program check
     call optimizer(60, 100000, 3, lbound, ubound, desired_error,  test_fct, result)
     print*, result
 
-end program check
+end program basic_checks
+
+

@@ -49,6 +49,10 @@ integer function rand_int(lower, upper) result(res)
     else
         res = ceiling(rand_real(1))
     end if 
+
+    if(res == 0) then ! why does this still happens???
+        res = 1
+    end if
     
 end function rand_int
 
