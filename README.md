@@ -23,16 +23,16 @@ The project contains only one subroutine called optimizer. It accepts the follow
 6. real(8) :: The desired minimal error 
 7. The loss function is of type:
 
-        ```fortran 
-        interface
-            function fct (inp, problem_size) result(out)
-                implicit none
-                integer, intent(in) :: problem_size
-                real(8), intent(in), dimension(problem_size) :: inp
-                real(8) :: out
-            end function fct
-        end interface
-        ```
+```fortran 
+interface
+    function fct (inp, problem_size) result(out)
+        implicit none
+        integer, intent(in) :: problem_size
+        real(8), intent(in), dimension(problem_size) :: inp
+        real(8) :: out
+    end function fct
+end interface
+```
         
 8. real(8), dimension(n_params) :: An array where the optimized parameter are stored (dimension(n_params))
 9. integer :: An optional parameter defining the topology. If chosen 1 the star topology is used. If chosen 2 the random adaptive topology is used. The default value is 1 (topo) 
