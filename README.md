@@ -43,10 +43,10 @@ end interface
 
 
 ```fortran
-module testfct
+module objectivefct
 
     contains 
-    function test_fct(inp, problem_size) result(out)
+    function f(inp, problem_size) result(out)
         !! This function defines a multidimensional rosenbrock function
         !! For problem_size = 3 Minimum at (1,1,1) 
         !! For 4 <= problem_size <= 7 local minima near (-1, 1, ...,1) 
@@ -65,9 +65,9 @@ module testfct
 end module
 
 
-program PSO
+program example
     
-  use testfct
+  use objectivefct
   use psomod
 
   implicit none
@@ -85,11 +85,11 @@ program PSO
   ub = 10
   desired_error = 0.00001
 
-  call optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, test_fct, result)
+  call optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, f, result)
 
   print*, result
 
-end program PSO
+end program example
 ```
 
 
