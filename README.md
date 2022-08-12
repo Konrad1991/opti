@@ -22,6 +22,7 @@ The project contains only one subroutine called optimizer. It accepts the follow
 5. real(8), dimension(n_params) :: An array containing the upper boundaries for the optimization (dimension(n_params))
 6. real(8) :: The desired minimal error 
 7. The loss function is of type:
+
         ```fortran 
         interface
             function fct (inp, problem_size) result(out)
@@ -32,6 +33,7 @@ The project contains only one subroutine called optimizer. It accepts the follow
             end function fct
         end interface
         ```
+        
 8. real(8), dimension(n_params) :: An array where the optimized parameter are stored (dimension(n_params))
 9. integer :: An optional parameter defining the topology. If chosen 1 the star topology is used. If chosen 2 the random adaptive topology is used. The default value is 1 (topo) 
 10. integer :: An optional parameter defining the number of neighbours if the topology is the random adaptive topology. Otherwise the parameter is ignored. The default value is set to 4. 
