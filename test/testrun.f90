@@ -7,7 +7,7 @@ program main
   
     implicit none
   
-    integer:: n_swarm, n_generations, n_params
+    integer:: n_swarm, n_generations, n_params, topology, n_neighbours
     real(8) :: lb(3), ub(3)
     real(8) :: desired_error
     real(8) :: result(3)
@@ -19,8 +19,13 @@ program main
     lb = -10
     ub = 10
     desired_error = 0.00001
+    topology = 1
+    n_neighbours = 20
+
   
-    call optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, test_fct, result)
+    call optimizer(n_swarm, n_generations, n_params,  &
+                   lb, ub, desired_error, test_fct, result, &
+                   topology, n_neighbours)
   
     print*, result
   

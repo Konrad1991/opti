@@ -35,7 +35,7 @@ end type nb
 
 contains
 
-function init(size) result(nbhood)
+function init(size, Kub) result(nbhood)
     use random_int, only: rand_int, ri
 
     implicit none
@@ -47,7 +47,7 @@ function init(size) result(nbhood)
     call check(size >= 3, msg = 'The swarm should consists of at least 3 particles')
 
     Klb = 0 ! no neighbours
-    Kub = 4
+    !Kub = 4
     allocate(nbhood(size))
     
     do i = 1, size 
@@ -82,7 +82,7 @@ subroutine print_nbhood(size, nbhood)
 end subroutine
 
 
-subroutine recalc(size, nbhood)
+subroutine recalc(size, nbhood, Kub)
     use random_int, only: rand_int, ri
 
     implicit none
@@ -92,7 +92,7 @@ subroutine recalc(size, nbhood)
     type(nb), dimension(size) :: nbhood
 
     Klb = 0 ! no neighbours
-    Kub = 4
+    !Kub = 4
 
     do i = 1, size 
         K = rand_int(Klb, Kub)

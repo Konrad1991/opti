@@ -28,13 +28,11 @@ module psomod
 contains
 
     ! subroutine which evaluates particle
-    subroutine calculate_errors(inp)
+    subroutine calculate_errors(inp, index)
         implicit none
         type(swarm_struct) :: inp
-        integer :: i
-        do i = 1, inp%n_swarm
-            inp%current_errors(i) = inp%userfct(inp%S(i, :), inp%n_params)
-        end do
+        integer :: index
+        inp%current_errors(index) = inp%userfct(inp%S(index, :), inp%n_params)
     end subroutine
 
     ! checks if particle are above or below boundary.
@@ -56,7 +54,9 @@ contains
     end subroutine
 
     ! The actual optimizer (PSO)
-    subroutine optimizer(n_swarm, n_generations, n_params,  lb, ub, desired_error, fct, result)
+    subroutine optimizer(n_swarm, n_generations, n_params, &
+         lb, ub, desired_error, fct, result, topo, n_neighbours)
+
         implicit none
         type(swarm_struct) :: struct
 
@@ -90,6 +90,11 @@ contains
 
         real(8), intent(inout), dimension(n_params) :: result
 
+        integer, optional :: topo
+        integer, optional :: n_neighbours
+
+        integer :: topology, Kub
+
         interface
             function fct (inp, problem_size) result(out)
                 implicit none
@@ -98,6 +103,28 @@ contains
                 real(8) :: out
             end function fct
         end interface
+
+        if(present(n_neighbours)) then
+            Kub = n_neighbours
+        else
+            Kub = 4
+        end if 
+
+        if(present(topo)) then
+            topology = topo
+        else
+            topology = 1 ! star topology
+        end if 
+
+        if( (topology == 1) .and. (present(n_neighbours))) then
+            print*, "Kub is ignored as topology is 1"
+        end if
+
+        ! checks
+        call check( (topology > 0) .and. (topology <= 2), &
+                msg = 'upper boundary is smaller or equal lower boundary')
+
+        call check(Kub >= 1, msg = "upper bounds of neighbours has to be at least 1")
 
         ! Initialisation swarm
         struct = initialise(n_swarm, n_params, lb, ub, fct)
@@ -115,12 +142,28 @@ contains
         do while ( (checker .eqv. .TRUE.) .and. (i < n_generations))
 
             ! calculation of neighberhood if needed
-            if (i == 0) then
-                ! Initialize nbhood
-                nbhood = init(n_swarm)
-            else if (convergence .eqv. .TRUE.) then
-                call recalc(n_swarm, nbhood)
-                convergence = .FALSE.
+            if(i == 0) then
+
+                select case(topology)
+                    case(1) ! star topology
+                        do j = 1, n_swarm
+                            call calculate_errors(struct, j)
+                        end do
+                        best_pos = minloc(struct%best_errors)
+                        min_position = best_pos(1)
+                    case(2) ! random adaptive topology
+                        nbhood = init(n_swarm, kub) ! Initialize nbhood
+                end select
+
+            else if ( (convergence .eqv. .TRUE.) .and. (topology == 2)) then
+                select case(topology)
+                    case(1)
+                        best_pos = minloc(struct%best_errors)
+                        min_position = best_pos(1)
+                    case(2)  
+                        call recalc(n_swarm, nbhood, kub)
+                        convergence = .FALSE.
+                end select 
             end if
 
             ! update par_w, cog and soc
@@ -132,26 +175,32 @@ contains
             ! Start population loop
             do j = 1, n_swarm
 
-                ! get the best particle of neigherhood j
-                ! =================================================
-                if(nbhood(j)%size == 1) then
-                    min_position = j
-                else if(nbhood(j)%size == 2) then
-                    if(struct%best_errors(nbhood(j)%neighbours(1)) < struct%best_errors(nbhood(j)%neighbours(2)) ) then
-                        min_position = nbhood(j)%neighbours(1)
-                    else
-                        min_position = nbhood(j)%neighbours(2)
-                    end if
-                else if(nbhood(j)%size > 2) then
-                    do k = 1, (nbhood(j)%size -1)
-                        if(struct%best_errors(nbhood(j)%neighbours(k)) < struct%best_errors(nbhood(j)%neighbours(k + 1)) ) then
-                            min_position = nbhood(j)%neighbours(k)
+                select case(topology)
+                    case(1) ! star topology
+                        local_best_parameters = struct%S(min_position, :)
+                    case(2) ! random adaptive topology
+                        ! get the best particle of neigherhood j
+                        ! =================================================
+                        if(nbhood(j)%size == 1) then
+                            min_position = j
+                        else if(nbhood(j)%size == 2) then
+                            if(struct%best_errors(nbhood(j)%neighbours(1)) < struct%best_errors(nbhood(j)%neighbours(2)) ) then
+                                min_position = nbhood(j)%neighbours(1)
+                            else
+                                min_position = nbhood(j)%neighbours(2)
+                            end if
+                        else if(nbhood(j)%size > 2) then
+                            do k = 1, (nbhood(j)%size -1)
+                                if(struct%best_errors(nbhood(j)%neighbours(k)) < &
+                                    struct%best_errors(nbhood(j)%neighbours(k + 1)) ) then
+                                    min_position = nbhood(j)%neighbours(k)
+                                end if
+                            end do
                         end if
-                    end do
-                end if
-
-                local_best_parameters = struct%S(min_position, :)
-                ! =================================================
+                        local_best_parameters = struct%S(min_position, :)
+                        ! =================================================
+                end select
+                
 
                 ! Update velocities and particle
                 ! =================================================
@@ -164,14 +213,14 @@ contains
                 struct%S(j, :) = struct%S(j, :) + struct%velocities(j, :)
                 ! =================================================
 
-                ! evaluate particle
+                ! check boundaries
                 ! =================================================
                 call check_boundaries(struct, n_params, lb, ub, j)
                 ! =================================================
 
-                ! check boundaries
+                ! evaluate particle 
                 ! =================================================
-                call calculate_errors(struct)
+                call calculate_errors(struct, j)
                 ! =================================================
 
                 ! check if personal best is found
@@ -182,6 +231,7 @@ contains
                 end if
 
                 best_pos = minloc(struct%best_errors)
+                !min_position = best_pos(1)
                 min_position_error = struct%best_errors(best_pos(1))
                 ! =================================================
 
@@ -221,7 +271,9 @@ contains
 
         result = struct%parameter_of_best_particle
 
-        call delete_nbhood(n_swarm ,nbhood)
+        if(topology == 2) then
+            call delete_nbhood(n_swarm ,nbhood)
+        end if 
         call delete_swarm(struct)
 
     end subroutine
